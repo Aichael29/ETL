@@ -7,11 +7,15 @@ Créer un pipeline ETL pour extraire des données à partir de sources multiples
 
 ## Fonctionnalités clés :
 
-Extraction de données à partir de sources multiples telles que des fichiers CSV, des bases de données MySQL et des API externes.
-Transformation de données en utilisant des techniques telles que la normalisation, la concaténation, la jointure, l'agrégation et la conversion de type de données.
-Chargement des données dans une base de données, telle que MySQL ou PostgreSQL, avec une gestion des erreurs efficace pour minimiser les pertes de données.
-Planification de l'exécution du pipeline ETL pour une automatisation régulière de l'ensemble du processus.
-Documentation complète du processus ETL et des données stockées dans la base de données.
+* Extraction de données à partir de sources multiples telles que des fichiers CSV, des bases de données MySQL et des API externes.
+
+* Transformation de données en utilisant des techniques telles que la normalisation, la concaténation, la jointure, l'agrégation et la conversion de type de données.
+
+* Chargement des données dans une base de données, telle que MySQL ou PostgreSQL, avec une gestion des erreurs efficace pour minimiser les pertes de données.
+
+* Planification de l'exécution du pipeline ETL pour une automatisation régulière de l'ensemble du processus.
+
+* Documentation complète du processus ETL et des données stockées dans la base de données.
 
 ## Technologies utilisées :
 
