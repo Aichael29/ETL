@@ -1,16 +1,17 @@
-# This is a sample Python script.
+import pandas as pd
+import sqlite3
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Étape d'extraction : lecture du fichier CSV
+df = pd.read_csv('modified_file2.csv')
 
+# Étape de transformation (si nécessaire)
+# Vous pouvez effectuer des modifications sur le dataframe ici
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# Étape de chargement : création de la connexion à la base de données SQLite
+conn = sqlite3.connect('base_de_donnees.db')
 
+# Chargement du dataframe dans une table SQLite
+df.to_sql('nom_de_la_table', conn, if_exists='replace')
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# Fermeture de la connexion à la base de données
+conn.close()
