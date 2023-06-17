@@ -1,59 +1,153 @@
 import csv
-import mysql.connector
 import datetime
 
-# Informations de connexion à la base de données MySQL
+import mysql.connector
+
+# Informations de connexion à la base de données
 host = 'localhost'
 port = '3306'
 username = 'root'
 password = 'Mynewp@ssw0rd'
-database = 'traffic'
+database = 'traffic_database'
 
-# Établir la connexion à la base de données
-conn = mysql.connector.connect(
-    host=host,
-    port=port,
-    user=username,
-    password=password,
-    database=database
-)
-cursor = conn.cursor()
+# Chemin du fichier CSV
+csv_file = 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\traffic.csv'
 
-# Chemin vers le fichier CSV à insérer
-csv_file = "C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\traffic.csv"
+# Fonction pour créer les tables B2B et B2C dans la base de données
+def create_tables():
+    conn = mysql.connector.connect(host=host, port=port, user=username, password=password, database=database)
+    cursor = conn.cursor()
 
-# Nom de la table cible dans la base de données
-table_name = 'call_data'
+    # Création de la table B2B
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS B2B (
+            id_date VARCHAR(255),
+            date_debut DATETIME,
+            type_even VARCHAR(255),
+            nombre_even INT,
+            even_minutes FLOAT,
+            direction_appel VARCHAR(255),
+            termination_type VARCHAR(255),
+            type_reseau VARCHAR(255),
+            type_destination VARCHAR(255),
+            operator VARCHAR(255),
+            country VARCHAR(255),
+            city VARCHAR(255),
+            gamme VARCHAR(255),
+            marche VARCHAR(255),
+            segment VARCHAR(255),
+            billing_type VARCHAR(255),
+            contract_id VARCHAR(255),
+            date_fin DATETIME,
+            annee INT,
+            mois INT,
+            jour INT,
+            annee_fin INT,
+            mois_fin INT,
+            jour_fin INT,
+            traffic_in FLOAT,
+            traffic_out FLOAT
+        )
+    """)
 
-# Ouvrir le fichier CSV et insérer les lignes dans la table
-with open(csv_file, 'r') as file:
-    reader = csv.reader(file, delimiter=',')
-    next(reader)  # Ignorer l'en-tête du fichier CSV
-    for row in reader:
-        # Convert date format for date_debut
-        date_debut = datetime.datetime.strptime(row[2], '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+    # Création de la table B2C
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS B2C (
+            id_date VARCHAR(255),
+            date_debut DATETIME,
+            type_even VARCHAR(255),
+            nombre_even INT,
+            even_minutes FLOAT,
+            direction_appel VARCHAR(255),
+            termination_type VARCHAR(255),
+            type_reseau VARCHAR(255),
+            type_destination VARCHAR(255),
+            operator VARCHAR(255),
+            country VARCHAR(255),
+            city VARCHAR(255),
+            gamme VARCHAR(255),
+            marche VARCHAR(255),
+            segment VARCHAR(255),
+            billing_type VARCHAR(255),
+            contract_id VARCHAR(255),
+            date_fin DATETIME,
+            annee INT,
+            mois INT,
+            jour INT,
+            annee_fin INT,
+            mois_fin INT,
+            jour_fin INT,
+            traffic_in FLOAT,
+            traffic_out FLOAT
+        )
+    """)
 
-        # Convert date format for date_fin
-        date_fin = datetime.datetime.strptime(row[19], '%d/%m/%Y %H:%M').strftime('%Y-%m-%d %H:%M:%S')
+    conn.commit()
+    cursor.close()
+    conn.close()
 
-        # Vérifier si la valeur de even_minutes est vide ou non
-        if row[5] != '':
-            try:
-                even_minutes = float(row[5])
-            except ValueError:
+# Fonction pour insérer les données du fichier CSV dans les tables B2B et B2C
+def insert_data():
+    conn = mysql.connector.connect(host=host, port=port, user=username, password=password, database=database)
+    cursor = conn.cursor()
+
+    with open(csv_file, 'r') as file:
+        csv_data = csv.reader(file)
+        next(csv_data)  # Skip header row
+
+        for row in csv_data:
+            # Suppression des colonnes dn et profile_id
+            row.pop(1)  # Suppression de dn
+            row.pop(12)  # Suppression de profile_id
+
+            id_date, date_debut, type_even, nombre_even, even_minutes, direction_appel, termination_type, \
+            type_reseau, type_destination, operator, country, city, gamme, marche, segment, billing_type, \
+            contract_id, date_fin = row
+
+            # Conversion des dates de début et de fin au format '%Y-%m-%d %H:%M:%S'
+            date_debut = datetime.datetime.strptime(date_debut, '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+            date_fin = datetime.datetime.strptime(date_fin, '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+
+            # Vérification de la valeur de even_minutes
+            if even_minutes:
+                even_minutes = float(even_minutes)
+            else:
                 even_minutes = None
-        else:
-            even_minutes = None
 
-        # Formuler la requête d'insertion SQL
-        sql = f"INSERT INTO {table_name} (id_date, dn, date_debut, type_even, nombre_even, even_minutes, direction_appel, termination_type, type_reseau, type_destination, operator, country, profile_id, city, gamme, marche, segment, billing_type, contract_id, date_fin) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            # Division des dates de début et de fin en différentes colonnes
+            annee, mois, jour = date_debut[:4], date_debut[5:7], date_debut[8:10]
+            annee_fin, mois_fin, jour_fin = date_fin[:4], date_fin[5:7], date_fin[8:10]
 
-        # Exécuter la requête d'insertion avec les valeurs de la ligne actuelle du fichier CSV
-        cursor.execute(sql, (
-            row[0], row[1], date_debut, row[3], row[4], even_minutes, row[6], row[7], row[8], row[9], row[10], row[11],
-            row[12], row[13], row[14], row[15], row[16], row[17], row[18], date_fin))
+            # Renseignement des colonnes traffic_in et traffic_out en fonction de la valeur de direction_appel
+            traffic_in = even_minutes if direction_appel == 'IN' else None
+            traffic_out = even_minutes if direction_appel == 'OUT' else None
 
-# Valider les changements et fermer la connexion
-conn.commit()
-cursor.close()
-conn.close()
+            # Insertion des données dans la table B2B ou B2C en fonction de la valeur de segment
+            if segment == 'B2B':
+                table = 'B2B'
+            else:
+                table = 'B2C'
+
+            # Requête d'insertion
+            query = f"""
+                INSERT INTO {table} (id_date, date_debut, type_even, nombre_even, even_minutes, direction_appel,
+                termination_type, type_reseau, type_destination, operator, country, city, gamme, marche, segment,
+                billing_type, contract_id, date_fin, annee, mois, jour, annee_fin, mois_fin, jour_fin, traffic_in,
+                traffic_out)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s)
+            """
+            values = (
+                id_date, date_debut, type_even, nombre_even, even_minutes, direction_appel, termination_type,
+                type_reseau, type_destination, operator, country, city, gamme, marche, segment, billing_type,
+                contract_id, date_fin, annee, mois, jour, annee_fin, mois_fin, jour_fin, traffic_in, traffic_out
+            )
+            cursor.execute(query, values)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+# Appels des fonctions pour créer les tables et insérer les données
+create_tables()
+insert_data()
