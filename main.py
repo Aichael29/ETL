@@ -10,10 +10,10 @@ username = 'root'
 password = 'Mynewp@ssw0rd'
 database = 'traffic_database'
 
-# Chemin du fichier CSV
+# Extraire les donnees
 csv_file = 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\traffic.csv'
 
-# Fonction pour créer les tables B2B et B2C dans la base de données
+# Transformation: Fonction pour créer les tables B2B et B2C dans la base de données
 def create_tables():
     conn = mysql.connector.connect(host=host, port=port, user=username, password=password, database=database)
     cursor = conn.cursor()
@@ -37,7 +37,6 @@ def create_tables():
             marche VARCHAR(255),
             segment VARCHAR(255),
             billing_type VARCHAR(255),
-            contract_id VARCHAR(255),
             date_fin DATETIME,
             annee INT,
             mois INT,
@@ -69,7 +68,6 @@ def create_tables():
             marche VARCHAR(255),
             segment VARCHAR(255),
             billing_type VARCHAR(255),
-            contract_id VARCHAR(255),
             date_fin DATETIME,
             annee INT,
             mois INT,
@@ -86,7 +84,7 @@ def create_tables():
     cursor.close()
     conn.close()
 
-# Fonction pour insérer les données du fichier CSV dans les tables B2B et B2C
+# chargement: Fonction pour insérer les données du fichier CSV dans les tables B2B et B2C
 def insert_data():
     conn = mysql.connector.connect(host=host, port=port, user=username, password=password, database=database)
     cursor = conn.cursor()
@@ -97,12 +95,13 @@ def insert_data():
 
         for row in csv_data:
             # Suppression des colonnes dn et profile_id
-            row.pop(1)  # Suppression de dn
-            row.pop(12)  # Suppression de profile_id
+            del row[1]
+            del row[11]
+            del row[16]
 
             id_date, date_debut, type_even, nombre_even, even_minutes, direction_appel, termination_type, \
             type_reseau, type_destination, operator, country, city, gamme, marche, segment, billing_type, \
-            contract_id, date_fin = row
+            date_fin = row
 
             # Conversion des dates de début et de fin au format '%Y-%m-%d %H:%M:%S'
             date_debut = datetime.datetime.strptime(date_debut, '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
@@ -132,15 +131,15 @@ def insert_data():
             query = f"""
                 INSERT INTO {table} (id_date, date_debut, type_even, nombre_even, even_minutes, direction_appel,
                 termination_type, type_reseau, type_destination, operator, country, city, gamme, marche, segment,
-                billing_type, contract_id, date_fin, annee, mois, jour, annee_fin, mois_fin, jour_fin, traffic_in,
+                billing_type,  date_fin, annee, mois, jour, annee_fin, mois_fin, jour_fin, traffic_in,
                 traffic_out)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s)
             """
             values = (
                 id_date, date_debut, type_even, nombre_even, even_minutes, direction_appel, termination_type,
                 type_reseau, type_destination, operator, country, city, gamme, marche, segment, billing_type,
-                contract_id, date_fin, annee, mois, jour, annee_fin, mois_fin, jour_fin, traffic_in, traffic_out
+                date_fin, annee, mois, jour, annee_fin, mois_fin, jour_fin, traffic_in, traffic_out
             )
             cursor.execute(query, values)
 
